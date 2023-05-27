@@ -13,17 +13,14 @@ there_is_a_winner = False
 #Piece canTake 4*2=8
 #piece active 4*2=8
 
+from qLearningMagn.State import State
 
-#Dice
-#section 4
-#would take 2
-#would threaten 2
-#threat 4
-#would be in threat 4
-#would be haven 2
-#is in haven 2
-#is 6: 2
-#current score 5
+#print(np.ravel_multi_index(((2,0),(1,1)), (3,3)))
+#print(np.ravel_multi_index(((3,0),(0,0)), (7,6)))
+State(0,0,0,0,0,0,0,0,0)
+exit()
+
+
 
 
 
