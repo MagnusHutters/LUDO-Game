@@ -2,7 +2,7 @@
 import numpy as np
 import os
 class QTable:
-    qTableFile = "/qTable.npy"
+    qTableFile = "qLearningMagn/QTables/qTable.npy"
     changesBeforeAutosave=100
     def __init__(self, stateSpaceSize, actionSize):
         self.qTable=np.zeros((np.prod(stateSpaceSize),actionSize),float)
@@ -19,17 +19,17 @@ class QTable:
     def __getitem__(self, indices):
         if isinstance(indices, tuple):
             row, col = indices
-            return self.data[row][col]
+            return self.qTable[row][col]
         else:
-            return self.data[indices]
+            return self.qTable[indices]
 
     def __setitem__(self, indices, value):
         if isinstance(indices, tuple):
             row, col = indices
-            self.data[row][col] = value
+            self.qTable[row][col] = value
         else:
-            self.data[indices] = value
+            self.qTable[indices] = value
         self.changes+=1;
-        if(self.changes>=self.changesBeforeAutoSave):
+        if(self.changes>=self.changesBeforeAutosave):
             self.doSave()
             self.changes=0
