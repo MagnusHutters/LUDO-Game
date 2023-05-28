@@ -14,6 +14,8 @@ class MagnPlayer:
     discount = 0.75
     exploration = 0.25
 
+    neighborWeight=0
+
     def __init__(self,playerId=0):
         self.myPlayerId=playerId
 
@@ -102,7 +104,15 @@ class MagnPlayer:
             if state == None:
                 priorities.append(-1)
             else:
-                qEntry = self.qTable[state.Qindex]
+                qOwnEntry = self.qTable[state.Qindex]
+                qEntries=[]
+                neighboors = state.getNeigboors()
+                for neighboor in neighboors:
+                    qEntries.append(self.qTable[neighboor.Qindex])
+                neigboorQEntry = np.average(qEntries,0)
+
+                qEntry = self.neighborWeight*neigboorQEntry + (1-self.neighborWeight)*qOwnEntry;
+
                 action = np.argmax(qEntry)
                 if (random.random()<self.exploration) and doExplore:
                     action=np.random.randint(0, 4)

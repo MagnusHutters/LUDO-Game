@@ -180,7 +180,7 @@ class GameInterp:
 
     def getScore(self):
         playerScore = np.sum(self.playerPieces)
-        enemyScores = np.sum(self.enemyPieces)
+        enemyScores = np.sum(self.enemyPieces,1)
         self.score = playerScore-np.max(enemyScores)
         return self.score
     def getScoreStateValue(self):

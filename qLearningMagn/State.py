@@ -84,3 +84,30 @@ class State:
         self.Qindex=np.ravel_multi_index(self.state,self._stateMax)
 
         #print(self.Qindex)
+
+
+    def fromState(self, stateArray):
+        return State(
+            stateArray[0],
+            stateArray[1],
+            stateArray[2],
+            stateArray[3],
+            stateArray[4],
+            stateArray[5],
+            stateArray[6],
+            stateArray[7],
+            stateArray[8],
+            stateArray[9],
+            stateArray[10],
+        )
+    def getNeigboors(self):
+        neighbors=[]
+        for i in range(len(self.state)):
+            if(self.doGroupNeighboor[i]):
+                for delta in [-1, 1]:
+                    new_state = np.copy(self.state)
+                    new_state[i] += delta
+                    if( new_state[i] >=0 and new_state[i] <self._stateMax[i]):
+
+                        neighbors.append(self.fromState(new_state))
+        return neighbors
