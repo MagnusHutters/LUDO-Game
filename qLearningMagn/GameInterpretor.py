@@ -7,6 +7,7 @@ class GameInterp:
     _quarterGameSize = 13
     _starPositions = np.array([5, 12, 18, 25, 31, 38, 44, 51])
     _globePositionsGlobal = np.array([9, 22, 35, 48])
+    _homeStars = np.array([51,12,25,38])
     #"_globePositionsLocal = np.array([1])
     #"_globePositionsEnemyLocal = np.array([])
     #_dangerPositionsLocal = np.array([14, 27, 40])
@@ -14,6 +15,7 @@ class GameInterp:
 
         self.globalEnemyLocations = np.array([])
         self.glboalPlayerPositions = np.array([])
+
 
         self.reward = 0
         self.previousScore = 0
@@ -112,7 +114,12 @@ class GameInterp:
             return 0
 
     def checkWouldThreaten(self, location):
-
+        index = np.where(location == self._starPositions)[0]  # If star position: check next star instead
+        if len(index) > 0:
+            # If the target value is found in the array
+            index_before = index + 1
+            if (index_before >= self._starPositions.size): index_before -= self._starPositions.size
+            location = self._starPositions[index_before]
 
         for i in range(1,7):
             testPos = i+location
@@ -132,9 +139,23 @@ class GameInterp:
 
         location = self._GetGlobalPosition(self.playerIndex, self.playerPieces[pieceIndex])+addLocalPieceLocation
         enemyIndices = np.where(self.globalEnemyLocations == location)[0]
+        if self.playerPieces[pieceIndex] + addLocalPieceLocation >= 52:
 
-        if self.playerPieces[pieceIndex]+addLocalPieceLocation>=52:
-            return 1
+
+
+            if self.playerPieces[pieceIndex]+addLocalPieceLocation<57:
+                return 1
+            elif self.playerPieces[pieceIndex] + addLocalPieceLocation == 57:
+                return 2
+            elif self.playerPieces[pieceIndex] + addLocalPieceLocation > 57:
+                toSubtract = self.playerPieces[pieceIndex] + addLocalPieceLocation-57
+                if self.playerPieces[pieceIndex] - toSubtract >=52:
+                    return 1
+                else:
+                    return 0
+
+        if location == self._homeStars[self.playerIndex]: #If landing on home star
+            return 2
 
         index = np.where(location == self._starPositions)[0]  # If star position: check next star instead
         if len(index) > 0:
@@ -143,12 +164,13 @@ class GameInterp:
             if (index_before >= self._starPositions.size): index_before -= self._starPositions.size
             location = self._starPositions[index_before]
 
-        if (enemyIndices.size == 2):
+
+        if (enemyIndices.size == 2): #If 2 enemies not safe
             return 0
-        if location in self._globePositionsGlobal:
-            if (enemyIndices.size == 0):
+        if location in self._globePositionsGlobal: # if is globe
+            if (enemyIndices.size == 0): #and no enemies
                 return 1
-            if (enemyIndices.size == 1):
+            if (enemyIndices.size == 1): #and with enemy
                 return 0
         if location in self._dangerPositionsGlobal:
             return 0
@@ -166,8 +188,10 @@ class GameInterp:
             location = self._starPositions[index_before]
 
 
-
+        if (location in self._globePositionsGlobal or location in self._dangerPositionsGlobal):  # Dont return enemies if on a globe or homebase
+            return 0
         enemyIndices = np.where(self.globalEnemyLocations == location)[0]
+
 
         numberEnemies = np.clip(enemyIndices.size,0,2)
         return numberEnemies

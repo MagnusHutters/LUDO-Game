@@ -18,6 +18,9 @@ import numpy as np
 
 
 class State:
+
+
+    #Special Tile: none, star, haven, home, goal, danger, death
     _stateMax = np.array([
         4,  # Max section,
         3,  # Max isEnemy,
@@ -25,12 +28,14 @@ class State:
         2,  # Max wouldThreaten,
         4,  # Max threat,
         4,  # Max wouldBeInThreat,
-        2,  # Max wouldBeInHaven,
-        2,  # Max isInHaven,
+        3,  # Max wouldBeInHaven,
+        3,  # Max isInHaven,
         2,  # Max rolled6,
         2,  # Max isStar
         5  # Max currentScore
     ], int)
+
+
     stateNames = [
         "sec",
         "eny",
@@ -50,14 +55,14 @@ class State:
     doGroupNeighboor = np.array([
         1,  # Group neighboor section,
         0,  # Group neighboor isEnemy,
-        1,  # Group neighboor Does Threaten
-        1,  # Group neighboor wouldThreaten,
+        0,  # Group neighboor Does Threaten
+        0,  # Group neighboor wouldThreaten,
         1,  # Group neighboor threat,
         1,  # Group neighboor wouldBeInThreat,
         0,  # Group neighboor wouldBeInHaven,
         0,  # Group neighboor isInHaven,
         1,  # Group neighboor rolled6,
-        0,  # Group neighboor is star,
+        1,  # Group neighboor is star,
         1  # Group neighboor currentScore
     ], int)
 

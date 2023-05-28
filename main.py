@@ -34,6 +34,7 @@ vTrend=0.5
 numWins=0
 numLosses=0
 totalGames=0
+
 winPercentage=[]
 
 plt.ion()  # Turn on interactive mode
@@ -41,7 +42,11 @@ plt.figure()  # Create a new figure
 plt.show()  # Show the empty plot window
 
 while(1):
+#for i in range(1):
 
+    g = ludopy.Game(ghost_players=[1, 3])
+    there_is_a_winner = False
+    g.reset()
     while not there_is_a_winner:
         (dice, move_pieces, player_pieces, enemy_pieces, player_is_a_winner, there_is_a_winner), player_i = g.get_observation()
 
@@ -49,7 +54,9 @@ while(1):
 
         if(player_i==0): #My player
 
-            piece_to_move = myPlayer.update((dice, move_pieces, player_pieces, enemy_pieces, player_is_a_winner, there_is_a_winner), player_i, doExplore=False, training=False)
+            piece_to_move = myPlayer.update(
+                (dice, move_pieces, player_pieces, enemy_pieces, player_is_a_winner, there_is_a_winner)
+                , player_i, doExplore=False, training=False)
 
 
             #a = input("")
@@ -73,21 +80,25 @@ while(1):
             percent=numWins/totalGames
             winPercentage.append(percent)
             didWin.append(v)
-            vTrend = 0.995*vTrend + 0.005 * v
+            #vTrend = 0.995*vTrend + 0.005 * v
+
+            vTrend= np.average(didWin[max(0,len(didWin)-200):-1])
             didWinTrend.append(vTrend)
 
+
+
+
     #print("Game")
-    there_is_a_winner=False
-    g.reset()
+
     plt.clf()  # Clear the previous plot
-    plt.plot(winPercentage)  # Plot the updated data
+    plt.plot(didWinTrend)  # Plot the updated data
     plt.draw()  # Redraw the plot
     plt.pause(0.001)
 
-g = ludopy.Game(ghost_players=[1, 3])
 
 
-#print("Saving history to numpy file")
-#g.save_hist(f"game_history.npz")
-#print("Saving game video")
-#g.save_hist_video(f"game_video.mp4")
+
+print("Saving history to numpy file")
+g.save_hist(f"game_history.npz")
+print("Saving game video")
+g.save_hist_video(f"game_video.mp4")

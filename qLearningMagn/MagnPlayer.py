@@ -11,10 +11,10 @@ import random
 class MagnPlayer:
 
     learningRate=0.20
-    discount = 0.75
+    discount = 0.70
     exploration = 0.25
 
-    neighborWeight=0
+    neighborWeight=0.30
 
     def __init__(self,playerId=0):
         self.myPlayerId=playerId
