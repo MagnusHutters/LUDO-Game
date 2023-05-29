@@ -23,30 +23,28 @@ class State:
     #Special Tile: none, star, haven, home, goal, danger, death
     _stateMax = np.array([
         4,  # Max section,
-        3,  # Max isEnemy,
-        2,  # Does Threaten
-        2,  # Max wouldThreaten,
+        7,  # Max tileFeature,
+        2,  # Max isEnemy,
         4,  # Max threat,
         4,  # Max wouldBeInThreat,
-        3,  # Max wouldBeInHaven,
-        3,  # Max isInHaven,
+        2,  # Does Threaten
+        2,  # Max wouldThreaten,
+        2,  # Max isSafe,
         2,  # Max rolled6,
-        2,  # Max isStar
-        5  # Max currentScore
+        5   # Max currentScore
     ], int)
 
 
     stateNames = [
         "sec",
-        "eny",
-        "trtn",
-        "wtrtn",
+        "feat",
+        "enmy",
         "trt",
         "wtrt",
-        "whav",
-        "hav",
+        "trtn",
+        "wtrtn",
+        "safe",
         "is6",
-        "isS",
         "sco"
     ]
 
@@ -54,35 +52,24 @@ class State:
 
     doGroupNeighboor = np.array([
         1,  # Group neighboor section,
+        0,  # Group neighboor tileFeature,
         0,  # Group neighboor isEnemy,
-        0,  # Group neighboor Does Threaten
-        0,  # Group neighboor wouldThreaten,
         1,  # Group neighboor threat,
         1,  # Group neighboor wouldBeInThreat,
-        0,  # Group neighboor wouldBeInHaven,
-        0,  # Group neighboor isInHaven,
+        0,  # Group neighboor Threaten
+        0,  # Group neighboor wouldThreaten,
+        0,  # Group neighboor isSafe,
         1,  # Group neighboor rolled6,
-        1,  # Group neighboor is star,
-        1  # Group neighboor currentScore
+        1,  # Group neighboor currentScore
+
     ], int)
 
-    def __init__(self, section, isEnemy, doesThreaten, wouldThreaten, threat, wouldBeInThreat, wouldBeInHaven, isInHaven, rolled6, isStar, currentScore):
+    def __init__(self, array):
 
 
 
-        self.state = np.array([
-            section,
-            isEnemy,
-            doesThreaten,
-            wouldThreaten,
-            threat,
-            wouldBeInThreat,
-            wouldBeInHaven,
-            isInHaven,
-            rolled6,
-            isStar,
-            currentScore
-        ],int)
+        self.state = np.array(array
+        ,int)
 
 
         #self.state=np.clip(self._state,0,self._stateMax-1)
@@ -92,18 +79,7 @@ class State:
 
 
     def fromState(self, stateArray):
-        return State(
-            stateArray[0],
-            stateArray[1],
-            stateArray[2],
-            stateArray[3],
-            stateArray[4],
-            stateArray[5],
-            stateArray[6],
-            stateArray[7],
-            stateArray[8],
-            stateArray[9],
-            stateArray[10],
+        return State(stateArray
         )
     def getNeigboors(self):
         neighbors=[]

@@ -134,28 +134,52 @@ class GameInterp:
                     return 1
         return 0
 
-    def checkHaven(self, pieceIndex, addLocalPieceLocation=0, requiredForSafety=1):
-        closeThreat = 0
-
-        location = self._GetGlobalPosition(self.playerIndex, self.playerPieces[pieceIndex])+addLocalPieceLocation
-        enemyIndices = np.where(self.globalEnemyLocations == location)[0]
+    def isGoal(self, pieceIndex, addLocalPieceLocation):
+        location = self._GetGlobalPosition(self.playerIndex, self.playerPieces[pieceIndex]) + addLocalPieceLocation
+        if location == self._homeStars[self.playerIndex]: #If landing on home star
+            return 1
+        return 1 if self.playerPieces[pieceIndex] + addLocalPieceLocation == 57 else 0
+    def isHome(self,pieceIndex, addLocalPieceLocation):
         if self.playerPieces[pieceIndex] + addLocalPieceLocation >= 52:
-
-
-
-            if self.playerPieces[pieceIndex]+addLocalPieceLocation<57:
-                return 1
-            elif self.playerPieces[pieceIndex] + addLocalPieceLocation == 57:
-                return 2
-            elif self.playerPieces[pieceIndex] + addLocalPieceLocation > 57:
+            if self.playerPieces[pieceIndex] + addLocalPieceLocation > 57:
                 toSubtract = self.playerPieces[pieceIndex] + addLocalPieceLocation-57
                 if self.playerPieces[pieceIndex] - toSubtract >=52:
                     return 1
                 else:
                     return 0
+            else:
+                return 1
+        else:
+            return 0
 
-        if location == self._homeStars[self.playerIndex]: #If landing on home star
-            return 2
+    def isDeath(self, location):
+
+        index = np.where(location == self._starPositions)[0]  # If star position: check next star instead
+        if len(index) > 0:
+            # If the target value is found in the array
+            index_before = index + 1
+            if (index_before >= self._starPositions.size): index_before -= self._starPositions.size
+            location = self._starPositions[index_before]
+
+        enemyIndices = np.where(self.globalEnemyLocations == location)[0]
+        if enemyIndices.size>0:
+
+
+            if (location in self._globePositionsGlobal) or (location in self._dangerPositionsGlobal):  # Dont return enemies if on a globe or homebase
+                return 1
+
+            if enemyIndices.size>1:
+                return 1
+
+        return 0
+
+
+    def checkHaven(self, pieceIndex, addLocalPieceLocation=0, requiredForSafety=1):
+        closeThreat = 0
+
+        location = self._GetGlobalPosition(self.playerIndex, self.playerPieces[pieceIndex])+addLocalPieceLocation
+        enemyIndices = np.where(self.globalEnemyLocations == location)[0]
+
 
         index = np.where(location == self._starPositions)[0]  # If star position: check next star instead
         if len(index) > 0:
@@ -178,6 +202,29 @@ class GameInterp:
         if friendIndices.size == requiredForSafety:
             return 1
         return 0
+
+
+    def checkFeature(self, pieceIndex, addLocalPieceLocation=0, requiredForSafety=1 ):
+        location = self._GetGlobalPosition(self.playerIndex, self.playerPieces[pieceIndex]) + addLocalPieceLocation
+        if self.isDeath(location):
+            return 6
+        if location in self._dangerPositionsGlobal:
+            return 5
+        if self.isGoal(pieceIndex,addLocalPieceLocation=addLocalPieceLocation):
+            return 4
+        if self.isHome(pieceIndex,addLocalPieceLocation=addLocalPieceLocation):
+            return 3
+        if self.checkHaven(pieceIndex,addLocalPieceLocation=addLocalPieceLocation,requiredForSafety=requiredForSafety):
+            return 2
+        if self.isStar(location):
+            return 1
+        return 0
+
+
+    # Special Tile: none, star, haven, home, goal, danger, death
+
+
+
     def checkEnemyInPos(self, location):
 
         index = np.where(location == self._starPositions)[0] #If star position: check next star instead
@@ -192,9 +239,10 @@ class GameInterp:
             return 0
         enemyIndices = np.where(self.globalEnemyLocations == location)[0]
 
+        if(enemyIndices.size==1):
+            return 1
+        return 0
 
-        numberEnemies = np.clip(enemyIndices.size,0,2)
-        return numberEnemies
 
     def getSection(self, pieceIndex):
         section = int(np.clip(np.floor(self.playerPieces[pieceIndex]/13),0,3))
@@ -202,13 +250,13 @@ class GameInterp:
     def isStar(self, location):
         return 1 if location in self._starPositions else 0
 
-    def getScore(self):
+    def getPieceScore(self):
         playerScore = np.sum(self.playerPieces)
         enemyScores = np.sum(self.enemyPieces,1)
         self.score = playerScore-np.max(enemyScores)
         return self.score
     def getScoreStateValue(self):
-        score = self.getScore()
+        score = self.getPieceScore()
         if score <= -30 : return 0
         if score <= -10: return 1
         if score <  10: return 2
@@ -227,13 +275,28 @@ class GameInterp:
         wouldThreaten = self.checkWouldThreaten(prospectiveLocation)# would threaten 2
         threat = self.checkThreat(pieceLocation)# threat 4
         wouldBeThreat = self.checkThreat(prospectiveLocation)# would be in threat 4
-        wouldBeHaven = self.checkHaven(pieceIndex, addLocalPieceLocation=dice)# would be haven 2
+        #wouldBeHaven = self.checkHaven(pieceIndex, addLocalPieceLocation=dice)# would be haven 2
         inHaven = self.checkHaven(pieceIndex, requiredForSafety=2)# is in haven 2
         is6 = 1 if dice == 6 else 0 # is 6: 2
-        isStar=self.isStar(prospectiveLocation)
+        #isStar=self.isStar(prospectiveLocation)
         score =self.getScoreStateValue() # current score 5
 
-        return State(section,wouldHitEnemy,doesThreaten,wouldThreaten,threat,wouldBeThreat,wouldBeHaven,inHaven,is6,isStar,score)
+        feature=self.checkFeature(pieceIndex,dice,requiredForSafety=1)
+
+        # Max section,
+        # Max tileFeature,
+        # Max isEnemy,
+        # Max threat,
+        # Max wouldBeInThreat,
+        # Does Threaten
+        # Max wouldThreaten,
+        # Max isSafe,
+        # Max rolled6,
+        # Max currentScore
+
+
+
+        return State((section,feature,wouldHitEnemy,threat,wouldBeThreat,doesThreaten,wouldThreaten,inHaven,is6,score))
 
 
     def getStates(self):
@@ -246,26 +309,49 @@ class GameInterp:
         return states
 
 
-    def _updateReward(self):
-        currentScore = self.getScore()
-        currentHavens=0
-        for piece in range(4):
-            currentHavens+=self.checkHaven(piece,requiredForSafety=2)
-        #self.reward = currentScore - self.previousScore
 
+
+
+    def getRewardScore(self):
+        currentPieceScore = self.getPieceScore()
+        currentHavens = 0
+        currentHomes = 0
+        currentGoals = 0
+        currentThreatens = 0
+        currentThreats = 0
+        for piece in range(4):
+            location = self._GetGlobalPosition(self.playerIndex, self.playerPieces[piece])
+
+            currentHavens       += self.checkHaven(piece, requiredForSafety=2)
+            currentHomes        += self.isHome(piece,0)
+            currentGoals        += self.isGoal(piece, 0)
+            currentThreatens    += self.checkWouldThreaten(location)
+            currentThreats      += self.checkThreat(location)
+
+        return currentPieceScore \
+                +(8 * currentHavens) \
+                +(10 * currentHomes) \
+                +(5 * currentGoals) \
+                +(2 * currentThreatens) \
+                -(3 * currentThreats) \
+                +(1 * 0)
+
+    def _updateReward(self):
+
+        #self.reward = currentScore - self.previousScore
+        currentScore = self.getRewardScore()
 
         scoreReward = currentScore - self.previousScore
-        if (scoreReward<=6 and scoreReward >=-6): scoreReward = 0
-
-        havenReward = (currentHavens-self.previousHavens) * 10
 
 
 
 
 
-        self.reward = scoreReward + havenReward
 
-        self.previousHavens=currentHavens
+
+
+        self.reward = scoreReward
+
         self.previousScore = currentScore
     def getCurrentReward(self):
         return self.reward

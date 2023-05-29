@@ -10,13 +10,18 @@ import random
 
 class MagnPlayer:
 
-    learningRate=0.20
-    discount = 0.70
-    exploration = 0.25
 
-    neighborWeight=0.30
 
-    def __init__(self,playerId=0):
+
+
+
+    def __init__(self,playerId=0, training = False, exploration = 0, learningRate=0.02, discount = 0.70, neighborWeight=0.30):
+
+        self.exploration = exploration
+        self.learningRate=learningRate
+        self.discount=discount
+        self.neighborWeight=neighborWeight
+        self.training=training
         self.myPlayerId=playerId
 
         self.enermyIndex = [x for x in [0,1,2,3] if x != self.myPlayerId] # filter out player id. indice for others
@@ -30,7 +35,8 @@ class MagnPlayer:
 
 
 
-    def update(self, obs, currentPlayer, doExplore=True, training=False):
+    def update(self, obs, currentPlayer):
+
         dice, move_pieces, player_pieces, enemy_pieces, player_is_a_winner, there_is_a_winner=obs
         if(currentPlayer!=self.myPlayerId):
             print("Not my turn")
@@ -39,13 +45,13 @@ class MagnPlayer:
         self.gameInterp.interp(dice, move_pieces, player_pieces, enemy_pieces, player_is_a_winner, there_is_a_winner, currentPlayer)
 
         currentStates = self.gameInterp.getStates()
-        if(training):
+        if(self.training):
             reward = self.gameInterp.getCurrentReward()
             self.rewardStates(self.previousStates, currentStates,self.previousActions, reward, updateNeigboors=True)
 
 
 
-        currentActions = self.chooseActions(currentStates,doExplore) #Return a list of actions - eg a list of priorities to choose that piece
+        currentActions = self.chooseActions(currentStates) #Return a list of actions - eg a list of priorities to choose that piece
 
         piece_to_move = self.selectPiece(currentActions, move_pieces)
 
@@ -114,7 +120,7 @@ class MagnPlayer:
                 qEntry = self.neighborWeight*neigboorQEntry + (1-self.neighborWeight)*qOwnEntry;
 
                 action = np.argmax(qEntry)
-                if (random.random()<self.exploration) and doExplore:
+                if (random.random()<self.exploration) and self.training:
                     action=np.random.randint(0, 4)
                 priorities.append(action)
 

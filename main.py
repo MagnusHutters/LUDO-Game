@@ -25,75 +25,106 @@ from qLearningMagn.MagnPlayer import MagnPlayer
 
 
 
-myPlayer = MagnPlayer(0)
-piece_to_move=0
 
-didWin=[]
-didWinTrend=[]
-vTrend=0.5
-numWins=0
-numLosses=0
-totalGames=0
 
-winPercentage=[]
 
 plt.ion()  # Turn on interactive mode
-plt.figure()  # Create a new figure
-plt.show()  # Show the empty plot window
-
-while(1):
-#for i in range(1):
-
-    g = ludopy.Game(ghost_players=[1, 3])
-    there_is_a_winner = False
-    g.reset()
-    while not there_is_a_winner:
-        (dice, move_pieces, player_pieces, enemy_pieces, player_is_a_winner, there_is_a_winner), player_i = g.get_observation()
+plt.figure(0)  # Create a new figure
 
 
+#while(1):
 
-        if(player_i==0): #My player
+def doRunGames(num, training = False, exploration = 0, learningRate=0.02, discount = 0.70, neighborWeight=0.30):
+    piece_to_move = 0
+    didWin = []
+    didWinTrend = []
+    vTrend = 0.5
+    numWins = 0
+    numLosses = 0
+    totalGames = 0
+    winPercentage = []
 
-            piece_to_move = myPlayer.update(
-                (dice, move_pieces, player_pieces, enemy_pieces, player_is_a_winner, there_is_a_winner)
-                , player_i, doExplore=False, training=False)
+    myPlayer = MagnPlayer(0, training=training, exploration=exploration, neighborWeight=neighborWeight, learningRate=learningRate,discount=discount)
+    for i in range(num):
 
-
-            #a = input("")
-        if(player_i==2): #Opponent
-
-
-            if len(move_pieces):
-                piece_to_move = move_pieces[np.random.randint(0, len(move_pieces))]
-            else:
-                piece_to_move = -1
-
-        _, _, _, _, _, there_is_a_winner = g.answer_observation(piece_to_move)
-        if(there_is_a_winner):
-            if(player_i==0):
-                numWins+=1
-            else:
-                numLosses+=1
-            totalGames+=1
-            v = 1.0 if player_i==0 else 0.0
-
-            percent=numWins/totalGames
-            winPercentage.append(percent)
-            didWin.append(v)
-            #vTrend = 0.995*vTrend + 0.005 * v
-
-            vTrend= np.average(didWin[max(0,len(didWin)-200):-1])
-            didWinTrend.append(vTrend)
+        g = ludopy.Game()
+        there_is_a_winner = False
+        g.reset()
+        while not there_is_a_winner:
+            (dice, move_pieces, player_pieces, enemy_pieces, player_is_a_winner, there_is_a_winner), player_i = g.get_observation()
 
 
+
+            if(player_i==0): #My player
+
+                piece_to_move = myPlayer.update(
+                    (dice, move_pieces, player_pieces, enemy_pieces, player_is_a_winner, there_is_a_winner), player_i)
+
+
+                #a = input("")
+            else: #Opponent
+
+
+                if len(move_pieces):
+                    piece_to_move = move_pieces[np.random.randint(0, len(move_pieces))]
+                else:
+                    piece_to_move = -1
+
+            _, _, _, _, _, there_is_a_winner = g.answer_observation(piece_to_move)
+            if(there_is_a_winner):
+                if(player_i==0):
+                    numWins+=1
+                else:
+                    numLosses+=1
+                totalGames+=1
+                v = 1.0 if player_i==0 else 0.0
+
+                percent=numWins/totalGames
+                winPercentage.append(percent)
+                didWin.append(v)
+                #vTrend = 0.995*vTrend + 0.005 * v
+
+                vTrend= np.average(didWin[max(0,len(didWin)-200):-1])
+                didWinTrend.append(vTrend)
+
+    myPlayer.qTable.doSave()
+    return (numWins/totalGames, didWin)
 
 
     #print("Game")
 
+
+
+evaluations=[]
+trainings=[]
+
+for i in range(100): #Epochs
+    trainingPercent=0
+    evaluation=0
+    evaluation, _ = doRunGames(1000, training=False, exploration=0, neighborWeight=0.3)
+    #trainingPercent, _ = doRunGames(100,training=True,exploration=0.25,learningRate=0.2,discount=0.7,neighborWeight=0.3)
+
+
+
+    evaluations.append(evaluation)
+    trainings.append(trainingPercent)
+
+
+
     plt.clf()  # Clear the previous plot
-    plt.plot(didWinTrend)  # Plot the updated data
+
+    print(f"Epoch: {i} \t Training Winrate: {trainingPercent}\t Evaluations Winrate: {evaluation}")
+    plt.plot(evaluations)  # Plot the updated data
+    #plt.plot(trainings)
+    plt.pause(0.01)
     plt.draw()  # Redraw the plot
-    plt.pause(0.001)
+    plt.show()  # Show the empty plot window
+
+
+
+
+
+
 
 
 
