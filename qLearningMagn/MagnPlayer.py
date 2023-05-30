@@ -1,7 +1,7 @@
 
 
 
-
+import time
 from qLearningMagn.GameInterpretor import GameInterp
 from qLearningMagn.QTable import QTable
 from qLearningMagn.State import State
@@ -15,7 +15,7 @@ class MagnPlayer:
 
 
 
-    def __init__(self,playerId=0, training = False, exploration = 0, learningRate=0.02, discount = 0.70, neighborWeight=0.30):
+    def __init__(self,playerId=0, qTable="Qtable", training = False, doResetQTable=False, exploration = 0, learningRate=0.02, discount = 0.70, neighborWeight=0.30):
 
         self.exploration = exploration
         self.learningRate=learningRate
@@ -30,7 +30,7 @@ class MagnPlayer:
         self.previousStates = []
         self.previousActions= []
 
-        self.qTable=QTable(State._stateMax,4)
+        self.qTable=QTable(State._stateMax,4, qTable=qTable,doResetQTable=doResetQTable)
 
 
 
@@ -41,20 +41,22 @@ class MagnPlayer:
         if(currentPlayer!=self.myPlayerId):
             print("Not my turn")
             return
-
+        #timePoint1 = time.time()
         self.gameInterp.interp(dice, move_pieces, player_pieces, enemy_pieces, player_is_a_winner, there_is_a_winner, currentPlayer)
-
+        #timePoint2 = time.time()
         currentStates = self.gameInterp.getStates()
         if(self.training):
             reward = self.gameInterp.getCurrentReward()
             self.rewardStates(self.previousStates, currentStates,self.previousActions, reward, updateNeigboors=True)
 
 
-
+        #timePoint3 = time.time()
         currentActions = self.chooseActions(currentStates) #Return a list of actions - eg a list of priorities to choose that piece
 
         piece_to_move = self.selectPiece(currentActions, move_pieces)
+        #timePoint4 = time.time()
 
+        #print("Interp: ", timePoint2-timePoint1, "Reward: ", timePoint3-timePoint2, "Choose: ", timePoint4-timePoint3)
         self.previousStates = currentStates
         self.previousActions = currentActions
 
